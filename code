@@ -1,0 +1,181 @@
+HTML (index.html)
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flappy Bird</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="game-container">
+    <h1>Flappy Bird</h1>
+    <div id="game"></div>
+    <p>Press SPACE or tap to flap!</p>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
+
+CSS (styles.css)
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #70c5ce;
+  font-family: Arial, sans-serif;
+}
+
+.game-container {
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 20px;
+  color: #fff;
+}
+
+#game {
+  width: 320px;
+  height: 480px;
+  background-color: #70c5ce;
+  border: 2px solid #000;
+  position: relative;
+  overflow: hidden;
+}
+
+#bird {
+  width: 40px;
+  height: 40px;
+  background-color: #ffcc00;
+  position: absolute;
+  top: 50%;
+  left: 50px;
+  border-radius: 50%;
+}
+
+.pipe {
+  width: 60px;
+  background-color: green;
+  position: absolute;
+}
+
+p {
+  margin-top: 20px;
+  color: #fff;
+}
+
+
+JavaScript (script.js)
+
+const game = document.getElementById("game");
+const bird = document.createElement("div");
+bird.id = "bird";
+game.appendChild(bird);
+
+let birdY = 150;
+let gravity = 1.5;
+let velocity = 0;
+let pipeInterval;
+let score = 0;
+
+// Add event listeners for flapping
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space") {
+    flap();
+  }
+});
+
+document.addEventListener("click", () => {
+  flap();
+});
+
+function flap() {
+  velocity = -10; // Move the bird up
+}
+
+function updateBird() {
+  velocity += gravity;
+  birdY += velocity;
+  bird.style.top = `${birdY}px`;
+
+  // Check for collisions with ground or sky
+  if (birdY > game.clientHeight - 40 || birdY < 0) {
+    endGame();
+  }
+}
+
+function createPipe() {
+  const pipeGap = 120; // Gap between top and bottom pipes
+  const pipeWidth = 60;
+  const pipeHeight = Math.floor(Math.random() * (game.clientHeight - pipeGap - 100)) + 50;
+
+  // Create top pipe
+  const topPipe = document.createElement("div");
+  topPipe.className = "pipe";
+  topPipe.style.height = `${pipeHeight}px`;
+  topPipe.style.left = `${game.clientWidth}px`;
+  topPipe.style.top = "0";
+  game.appendChild(topPipe);
+
+  // Create bottom pipe
+  const bottomPipe = document.createElement("div");
+  bottomPipe.className = "pipe";
+  bottomPipe.style.height = `${game.clientHeight - pipeHeight - pipeGap}px`;
+  bottomPipe.style.left = `${game.clientWidth}px`;
+  bottomPipe.style.bottom = "0";
+  game.appendChild(bottomPipe);
+
+  // Move pipes
+  let pipeX = game.clientWidth;
+  const pipeMoveInterval = setInterval(() => {
+    pipeX -= 2;
+    topPipe.style.left = `${pipeX}px`;
+    bottomPipe.style.left = `${pipeX}px`;
+
+    // Check for collision with bird
+    if (
+      pipeX < 70 &&
+      pipeX > 30 &&
+      (birdY < pipeHeight || birdY > pipeHeight + pipeGap - 40)
+    ) {
+      endGame();
+    }
+
+    // Remove pipes when they go off-screen
+    if (pipeX < -pipeWidth) {
+      clearInterval(pipeMoveInterval);
+      game.removeChild(topPipe);
+      game.removeChild(bottomPipe);
+      score++;
+      console.log(`Score: ${score}`);
+    }
+  }, 20);
+}
+
+function startGame() {
+  pipeInterval = setInterval(createPipe, 1500); // Generate pipes every 1.5 seconds
+  gameLoop();
+}
+
+function gameLoop() {
+  updateBird();
+  requestAnimationFrame(gameLoop);
+}
+
+function endGame() {
+  clearInterval(pipeInterval);
+  alert(`Game Over! Your score is ${score}`);
+  location.reload(); // Restart the game
+}
+
+startGame();
